@@ -1,14 +1,17 @@
 
 
 import { useMemo, useState } from 'react';
-import { buildLoyaltySeed, useStore, inr, fmtDT, withBalances } from '../lib/loyalty.js';
+import { buildLoyaltySeed, inr, fmtDT, withBalances, tierOf } from '../lib/loyalty.js';
 
 /* Petpooja sends ONLY the points of each bill (added / used).
    We calculate each customer's balance (total added - total used) in withBalances().
+   Tier (by lifetime points added): Silver at rules.silver (500), Gold at rules.gold (1000), below that no tier (shown as -).
    TODO: replace the demo data with API (GET /api/loyalty), each bill looks like
    { id, name, mobile, ts (bill date), bill (amount), earned (points added), redeemed (points used) } */
 export default function Loyalty() {
-  const [data] = useStore('ss_loyalty_v2', () => buildLoyaltySeed());
+  // Demo data comes straight from loyalty.js (not saved in the browser), so edits to loyalty.js always show.
+  // TODO: replace with API (GET /api/loyalty)
+  const data = useMemo(() => buildLoyaltySeed(), []);
   const [view, setView] = useState('bills'); // bills | customers
   const [q, setQ] = useState('');
 
@@ -63,28 +66,32 @@ export default function Loyalty() {
         ) : (
           <table className="responsive">
             <thead>
-              <tr><th>S.No</th><th>Customer Name</th><th>Mobile</th><th>Visits</th><th>Total Spend</th><th>Points Added</th><th>Points Used</th><th>Balance</th><th>Last Bill</th></tr>
+              <tr><th>S.No</th><th>Customer Name</th><th>Mobile</th><th>Total Spend</th><th>Points Added</th><th>Points Used</th><th>Balance</th><th>Tier</th><th>Last Bill</th></tr>
             </thead>
             <tbody>
-              {customers.map((c, i) => (
-                <tr key={c.mobile}>
-                  <td data-l="S.No">{i + 1}</td>
-                  <td data-l="Customer Name">{c.name}</td>
-                  <td data-l="Mobile">{c.mobile}</td>
-                  <td data-l="Visits">{c.visits}</td>
-                  <td data-l="Total Spend">{inr(c.spend)}</td>
-                  <td data-l="Points Added" className="ok">+{c.added}</td>
-                  <td data-l="Points Used" style={{ color: '#c0392b', fontWeight: 600 }}>{c.used ? `-${c.used}` : '-'}</td>
-                  <td data-l="Balance"><b>{c.balance}</b></td>
-                  <td data-l="Last Bill">{fmtDT(c.last)}</td>
-                </tr>
-              ))}
+              {customers.map((c, i) => {
+                const tier = tierOf(c.added, data.rules);
+                return (
+                  <tr key={c.mobile}>
+                    <td data-l="S.No">{i + 1}</td>
+                    <td data-l="Customer Name">{c.name}</td>
+                    <td data-l="Mobile">{c.mobile}</td>
+                    <td data-l="Total Spend">{inr(c.spend)}</td>
+                    <td data-l="Points Added" className="ok">+{c.added}</td>
+                    <td data-l="Points Used" style={{ color: '#c0392b', fontWeight: 600 }}>{c.used ? `-${c.used}` : '-'}</td>
+                    <td data-l="Balance"><b>{c.balance}</b></td>
+                    <td data-l="Tier">{tier === 'Bronze' ? '-' : <span className={`badge ${tier.toLowerCase()}`}>{tier}</span>}</td>
+                    <td data-l="Last Bill">{fmtDT(c.last)}</td>
+                  </tr>
+                );
+              })}
               {!customers.length && <tr><td colSpan="9" className="none">No customers found</td></tr>}
             </tbody>
           </table>
         )}
       </div>
       <p className="hint">{bills.length} bills · {totalAdded} points added · {totalUsed} points used</p>
+      
     </>
   );
 }

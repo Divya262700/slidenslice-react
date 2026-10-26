@@ -721,6 +721,7 @@ td {
   box-shadow: none !important;
 }
 
+
 /* keep the same look on focus too, nothing extra pops up */
 .modal input:focus,
 .dp-input:focus,
@@ -728,6 +729,37 @@ td {
   outline: none !important;
   box-shadow: none !important;
   border: 2px solid #D9C46A !important;
+}
+
+/* day chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0
+}
+
+.chip {
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: #fff;
+  color: #333;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s
+}
+
+.chip.on {
+  background: #F7C948;
+  border-color: #F7C948 !important;
+  color: #222
+}
+
+.chips.small .chip {
+  padding: 5px 12px;
+  font-size: .8rem;
+  font-weight: 500
 }
 
 /* ===== loyalty / offers / dashboard additions ===== */

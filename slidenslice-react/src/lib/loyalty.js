@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from 'react';
 
 /* ---------- rules (all editable on the Loyalty page) ---------- */
@@ -12,16 +10,16 @@ export const DEFAULT_RULES = {
 };
 
 /* ---------- templates (WhatsApp / SMS text) ---------- */
-export const TPL = {
-  thanks:
-    'Thank you {name}! Your bill of Rs.{bill} is received.{used} {earned} loyalty points added. Previous points: {prev}, current points: {cur}. Points can be used on regular orders once you reach {min}.',
-  offer:
-    'Hi {name}! {offer} on {days} ({valid}). Visit Slide and Slice to enjoy it.',
-  birthday:
-    'Dear {name}, Happy Birthday from Slide and Slice! As our {tier} member, enjoy {offer} on your special day.',
-};
-export const render = (tpl, vars) =>
-  (tpl || '').replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
+// export const TPL = {
+//   thanks:
+//     'Thank you {name}! Your bill of Rs.{bill} is received.{used} {earned} loyalty points added. Previous points: {prev}, current points: {cur}. Points can be used on regular orders once you reach {min}.',
+//   offer:
+//     'Hi {name}! {offer} on {days} ({valid}). Visit Slide and Slice to enjoy it.',
+//   birthday:
+//     'Dear {name}, Happy Birthday from Slide and Slice! As our {tier} member, enjoy {offer} on your special day.',
+// };
+// export const render = (tpl, vars) =>
+//   (tpl || '').replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
 
 /* ---------- helpers ---------- */
 export const tierOf = (lifetime, r) => (lifetime >= r.gold ? 'Gold' : lifetime >= r.silver ? 'Silver' : 'Bronze');
@@ -45,18 +43,6 @@ export const daysText = (days = []) =>
 /* ---------- segments ---------- */
 export const BUILTIN_SEGMENTS = ['All customers', 'Gold tier', 'Silver tier', 'Bronze tier', 'New customers'];
 
-export function inSegment(segName, customer, acc, rules, custom = []) {
-  const a = acc || { points: 0, lifetime: 0, visits: 0 };
-  const tier = tierOf(a.lifetime, rules);
-  if (segName === 'All customers') return true;
-  if (segName === 'Gold tier') return tier === 'Gold';
-  if (segName === 'Silver tier') return tier === 'Silver';
-  if (segName === 'Bronze tier') return tier === 'Bronze';
-  if (segName === 'New customers') return a.visits <= 1;
-  const c = custom.find((s) => s.name === segName);
-  if (c) return a.points >= (c.min || 0) && a.points <= (c.max || Infinity);
-  return false;
-}
 
 /* ---------- storage hook (same localStorage pattern as the other pages) ---------- */
 // TODO: replace with API calls
@@ -84,6 +70,9 @@ export const CUSTOMERS_SEED = [
 // Demo data. Petpooja sends ONLY these per bill: customer, mobile, date, amount, points added, points used.
 // [daysAgo, mobile, amount, pointsAdded, pointsUsed]
 const BILLS = [
+  // Gold demo: Priya S (1229 points added, 200 used, balance 1029) | Silver demo: Kumar R (603 points added)
+  [100, '9876543210', 60000, 600, 0], [90, '9876543210', 45000, 450, 0], [45, '9876543210', 3000, 30, 200],
+  [95, '9123456780', 30000, 300, 0], [80, '9123456780', 22000, 220, 0],
   [75, '9840011223', 12000, 120, 0], [60, '9876543210', 8000, 80, 0], [34, '9840011223', 900, 9, 0],
   [20, '9791122334', 520, 5, 0], [14, '9123456780', 7800, 78, 0], [9, '9876543210', 6500, 65, 0],
   [6, '9840011223', 1200, 12, 100], [5, '9884455667', 450, 4, 0], [3, '9944556677', 399, 3, 0],
