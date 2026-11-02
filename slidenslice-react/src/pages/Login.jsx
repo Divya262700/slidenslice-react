@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import { login } from '../lib/api';
+import { useAuth } from '../auth.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const Eye = ({ off }) => (
@@ -16,6 +18,9 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [show, setShow] = useState(false);
   const nav = useNavigate();
+  const { refresh } = useAuth();
+  const [serverError, setServerError] = useState('');
+const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -26,15 +31,35 @@ export default function Login() {
     return e;
   };
 
-  const submit = (ev) => {
-    ev.preventDefault();
-    const e = validate();
-    setErrors(e);
-    if (Object.keys(e).length) return;
-    // TODO: replace with real login API call
-    localStorage.setItem('ss_user', JSON.stringify({ email: form.email }));
+  // const submit = (ev) => {
+  //   ev.preventDefault();
+  //   const e = validate();
+  //   setErrors(e);
+  //   if (Object.keys(e).length) return;
+  //   // TODO: replace with real login API call
+  //   localStorage.setItem('ss_user', JSON.stringify({ email: form.email }));
+  //   nav('/', { replace: true });
+  // };
+  const submit = async (ev) => {
+  ev.preventDefault();
+  const e = validate();
+  setErrors(e);
+  setServerError('');
+  if (Object.keys(e).length) return;
+
+  setLoading(true);
+  try {
+    const data = await login(form.email, form.password);
+    // unga existing route guard 'ss_user' paakkuthu na, idhu avasiyam
+    localStorage.setItem('ss_user', JSON.stringify({ email: data.user.email }));
+    refresh(); 
     nav('/', { replace: true });
-  };
+  } catch (err) {
+    setServerError(err.message); // "Invalid email or password"
+  } finally {
+    setLoading(false);
+  }
+};
 
   const set = (k) => (ev) => setForm({ ...form, [k]: ev.target.value });
 
@@ -58,9 +83,14 @@ export default function Login() {
                 <Eye off={show} />
               </button>
             </div>
-            {errors.password && <small className="msg">{errors.password}</small>}
+          {errors.password && <small className="msg">{errors.password}</small>}
+            {serverError && <small className="msg">{serverError}</small>}
 
-            <button className="btn primary block" type="submit">Login</button>
+            <button className="btn primary block" type="submit" disabled={loading}>
+           {loading ? 'Logging in...' : 'Login'}
+            </button>
+
+            {/* <button className="btn primary block" type="submit">Login</button> */}
           </form>
         </div>
 

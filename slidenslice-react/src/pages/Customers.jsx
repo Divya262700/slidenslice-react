@@ -1,31 +1,52 @@
 import { useEffect, useState } from 'react';
 import Confirm from '../components/Confirm.jsx';
 import DatePicker from '../components/DatePicker.jsx';
+import { apiFetch } from '../lib/api';
 
-const SEED = [
-  { id: 1, name: 'Priya S', mobile: '9876543210', dob: '1995-04-12', weddingDate: '2020-02-14' },
-  { id: 2, name: 'Kumar R', mobile: '9123456780', dob: '1990-11-03', weddingDate: '' },
-];
+// const SEED = [
+//   { id: 1, name: 'Priya S', mobile: '9876543210', dob: '1995-04-12', weddingDate: '2020-02-14' },
+//   { id: 2, name: 'Kumar R', mobile: '9123456780', dob: '1990-11-03', weddingDate: '' },
+// ];
 const EMPTY = { name: '', mobile: '', dob: '', weddingDate: '' };
 const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '-');
 const today = new Date().toISOString().split('T')[0];
 
 export default function Customers() {
   // TODO: replace localStorage with API calls (GET/POST/PUT/DELETE)
-  const [rows, setRows] = useState(() => JSON.parse(localStorage.getItem('ss_customers') || 'null') || SEED);
+  // const [rows, setRows] = useState(() => JSON.parse(localStorage.getItem('ss_customers') || 'null') || SEED);
+  const [rows, setRows] = useState([]);
+
+useEffect(() => {
+  apiFetch('/customers').then(setRows).catch((e) => alert(e.message));
+}, []);
   const [q, setQ] = useState('');
   const [modal, setModal] = useState(null); // { mode: 'create'|'edit'|'view', data }
   const [del, setDel] = useState(null);
 
-  useEffect(() => localStorage.setItem('ss_customers', JSON.stringify(rows)), [rows]);
+  // useEffect(() => localStorage.setItem('ss_customers', JSON.stringify(rows)), [rows]);
 
   const list = rows.filter((r) => (r.name + r.mobile).toLowerCase().includes(q.toLowerCase()));
 
-  const save = (data) => {
-    if (data.id) setRows(rows.map((r) => (r.id === data.id ? data : r)));
-    else setRows([...rows, { ...data, id: Date.now() }]);
+  // const save = (data) => {
+  //   if (data.id) setRows(rows.map((r) => (r.id === data.id ? data : r)));
+  //   else setRows([...rows, { ...data, id: Date.now() }]);
+  //   setModal(null);
+  // };
+
+  const save = async (data) => {
+  try {
+    if (data.id) {
+      const u = await apiFetch(`/customers/${data.id}`, { method: 'PUT', body: JSON.stringify(data) });
+      setRows(rows.map((r) => (r.id === u.id ? u : r)));
+    } else {
+      const c = await apiFetch('/customers', { method: 'POST', body: JSON.stringify(data) });
+      setRows([c, ...rows]);
+    }
     setModal(null);
-  };
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   return (
     <>
@@ -72,7 +93,16 @@ export default function Customers() {
         <Confirm
           text={`Are you sure you want to delete ${del.name}?`}
           yes="Delete"
-          onYes={() => { setRows(rows.filter((r) => r.id !== del.id)); setDel(null); }}
+          // onYes={() => { setRows(rows.filter((r) => r.id !== del.id)); setDel(null); }}
+          onYes={async () => {
+  try {
+    await apiFetch(`/customers/${del.id}`, { method: 'DELETE' });
+    setRows(rows.filter((r) => r.id !== del.id));
+  } catch (err) {
+    alert(err.message);
+  }
+  setDel(null);
+}}
           onNo={() => setDel(null)}
         />
       )}

@@ -1,26 +1,30 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Confirm from './Confirm.jsx';
-
+import { logout as clearAuth } from '../lib/api';
+import { useAuth } from '../auth.jsx';
 const MENU = [
   ['/', 'Dashboard', '🏠'],
-  // ['/orders', 'Orders', '🧾'],
   ['/customers', 'Customers', '👥'],
   ['/offers', 'Offers', '🏷️'],
   ['/loyalty', 'Loyalty & Rewards', '🎁'],
    ['/chats', 'WhatsApp Chats', '💬'],
-  // ['/bulk-message', 'Bulk Message', '💬'],
-  // ['/faq-auto-reply', 'FAQ Auto Reply', '❓'],
-  // ['/settings', 'Settings', '⚙️'],
+
 ];
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
   const [askLogout, setAskLogout] = useState(false);
   const nav = useNavigate();
+   const { signOut } = useAuth(); 
 
-  const logout = () => {
-    localStorage.removeItem('ss_user');
+//   const logout = () => {
+//   clearAuth(); // token, user, ss_user ellam delete aagum api code 
+//   nav('/login', { replace: true });
+// };
+ const logout = () => {
+    clearAuth();
+    signOut();                    
     nav('/login', { replace: true });
   };
 

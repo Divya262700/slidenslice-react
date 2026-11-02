@@ -1,5 +1,6 @@
-
-import { useState } from 'react';
+// import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
 import Confirm from '../components/Confirm.jsx';
 import DatePicker from '../components/DatePicker.jsx';
 import Select from '../components/Select.jsx';
@@ -12,16 +13,16 @@ import { DAYS } from '../lib/loyalty.js'; // ['Mon','Tue','Wed','Thu','Fri','Sat
    - Wed, Thu, Fri .............. days: [Wed, Thu, Fri]
    - Diwali week ................ period: 05/11 to 10/11
    - Weekdays 3 PM to 6 PM ...... days: Mon-Fri + time 15:00 to 18:00 */
-const KEY = 'ss_offers_v4';
+// const KEY = 'ss_offers_v4';
 const TYPES = ['Percentage discount', 'Flat amount off', 'Fixed price item', 'Buy 1 Get 1', 'Free item', 'Combo offer'];
 const UNIT = { 'Percentage discount': '%', 'Flat amount off': '₹', 'Fixed price item': '₹' };
 
-const SEED = [
-  { id: 1, name: 'Diwali ₹199 XL Pizza', type: 'Fixed price item', value: 199, detail: '', from: '2026-11-05', to: '2026-11-10', days: [], tFrom: '', tTo: '', status: 'active' },
-  { id: 2, name: 'Mon-Sat 20% OFF', type: 'Percentage discount', value: 20, detail: '', from: '2026-10-01', to: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], tFrom: '', tTo: '', status: 'active' },
-  { id: 3, name: 'First Week Buy 1 Get 1', type: 'Buy 1 Get 1', value: '', detail: '', from: '2026-10-01', to: '2026-10-07', days: [], tFrom: '', tTo: '', status: 'active' },
-  { id: 4, name: 'Wednesday Special', type: 'Combo offer', value: '', detail: 'Zinger + Fries + Drink', from: '', to: '', days: ['Wed'], tFrom: '', tTo: '', status: 'active' },
-];
+// const SEED = [
+//   { id: 1, name: 'Diwali ₹199 XL Pizza', type: 'Fixed price item', value: 199, detail: '', from: '2026-11-05', to: '2026-11-10', days: [], tFrom: '', tTo: '', status: 'active' },
+//   { id: 2, name: 'Mon-Sat 20% OFF', type: 'Percentage discount', value: 20, detail: '', from: '2026-10-01', to: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], tFrom: '', tTo: '', status: 'active' },
+//   { id: 3, name: 'First Week Buy 1 Get 1', type: 'Buy 1 Get 1', value: '', detail: '', from: '2026-10-01', to: '2026-10-07', days: [], tFrom: '', tTo: '', status: 'active' },
+//   { id: 4, name: 'Wednesday Special', type: 'Combo offer', value: '', detail: 'Zinger + Fries + Drink', from: '', to: '', days: ['Wed'], tFrom: '', tTo: '', status: 'active' },
+// ];
 const EMPTY = { name: '', type: '', value: '', detail: '', from: '', to: '', days: [], tFrom: '', tTo: '', status: 'active' };
 
 const PRESETS = [
@@ -75,35 +76,59 @@ const normalize = (o) => {
   ['dFrom', 'dTo', 'mFrom', 'mTo', 'dates', 'note', 'schedule'].forEach((k) => delete n[k]);
   return n;
 };
-const loadRows = () => {
-  try {
-    for (const k of [KEY, 'ss_offers_v3', 'ss_offers_v2']) {
-      const saved = JSON.parse(localStorage.getItem(k) || 'null');
-      if (saved) {
-        const m = saved.map(normalize);
-        if (k !== KEY) localStorage.setItem(KEY, JSON.stringify(m));
-        return m;
-      }
-    }
-  } catch { /* ignore */ }
-  return SEED;
-};
+// const loadRows = () => {
+//   try {
+//     for (const k of [KEY, 'ss_offers_v3', 'ss_offers_v2']) {
+//       const saved = JSON.parse(localStorage.getItem(k) || 'null');
+//       if (saved) {
+//         const m = saved.map(normalize);
+//         if (k !== KEY) localStorage.setItem(KEY, JSON.stringify(m));
+//         return m;
+//       }
+//     }
+//   } catch { /* ignore */ }
+//   return SEED;
+// };
 
 /* ---------- page ---------- */
 export default function Offers() {
   // TODO: replace localStorage with API calls (GET/POST/PUT/DELETE)
-  const [rows, setRows] = useState(loadRows);
-  const [modal, setModal] = useState(null);
-  const [del, setDel] = useState(null);
-  const [q, setQ] = useState('');
+  // const [rows, setRows] = useState(loadRows);
+  // const [modal, setModal] = useState(null);
+  // const [del, setDel] = useState(null);
+  // const [q, setQ] = useState('');
+  const [rows, setRows] = useState([]);
+const [modal, setModal] = useState(null);
+const [del, setDel] = useState(null);
+const [q, setQ] = useState('');
+useEffect(() => {
+  apiFetch('/offers').then(setRows).catch((e) => alert(e.message));
+}, []);
 
-  const persist = (next) => { setRows(next); localStorage.setItem(KEY, JSON.stringify(next)); };
-  const list = rows.filter((r) => (r.name + r.type).toLowerCase().includes(q.trim().toLowerCase()));
+const list = rows.filter((r) => (r.name + r.type).toLowerCase().includes(q.trim().toLowerCase()));
 
-  const save = (data) => {
-    persist(data.id ? rows.map((r) => (r.id === data.id ? data : r)) : [...rows, { ...data, id: Date.now() }]);
+  // const persist = (next) => { setRows(next); localStorage.setItem(KEY, JSON.stringify(next)); };
+  // const list = rows.filter((r) => (r.name + r.type).toLowerCase().includes(q.trim().toLowerCase()));
+
+  // const save = (data) => {
+  //   persist(data.id ? rows.map((r) => (r.id === data.id ? data : r)) : [...rows, { ...data, id: Date.now() }]);
+  //   setModal(null);
+  // };
+
+  const save = async (data) => { // api code save
+  try {
+    if (data.id) {
+      const u = await apiFetch(`/offers/${data.id}`, { method: 'PUT', body: JSON.stringify(data) });
+      setRows(rows.map((r) => (r.id === u.id ? u : r)));
+    } else {
+      const c = await apiFetch('/offers', { method: 'POST', body: JSON.stringify(data) });
+      setRows([c, ...rows]);
+    }
     setModal(null);
-  };
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   return (
     <>
@@ -146,7 +171,17 @@ export default function Offers() {
       {modal && <OfferModal {...modal} onSave={save} onClose={() => setModal(null)} />}
       {del && (
         <Confirm text={`Are you sure you want to delete "${del.name}"?`} yes="Delete"
-          onYes={() => { persist(rows.filter((r) => r.id !== del.id)); setDel(null); }} onNo={() => setDel(null)} />
+          // onYes={() => { persist(rows.filter((r) => r.id !== del.id)); setDel(null); }} onNo={() => setDel(null)} 
+          onYes={async () => {
+  try {
+    await apiFetch(`/offers/${del.id}`, { method: 'DELETE' });
+    setRows(rows.filter((r) => r.id !== del.id));
+  } catch (err) {
+    alert(err.message);
+  }
+  setDel(null);
+}}
+          />
       )}
     </>
   );
