@@ -1,3 +1,5 @@
+import { loginService } from "../services/auth.service";
+
 const API_URL = 'http://localhost:5000/api';
 
 export function getToken() {
@@ -36,11 +38,9 @@ export async function apiFetch(path, options = {}) {
 }
 
 export async function login(email, password) {
-  const data = await apiFetch('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  localStorage.setItem('token', data.token);
-  localStorage.setItem('user', JSON.stringify(data.user));
+
+  const data = await loginService({email, password})
+  sessionStorage.setItem('token', data.data.token);
+  sessionStorage.setItem('user', JSON.stringify(data.data.user));
   return data;
 }

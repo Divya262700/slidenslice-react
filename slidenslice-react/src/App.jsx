@@ -1,30 +1,48 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Customers from './pages/Customers.jsx';
-import Offers from './pages/Offers.jsx';
-import Loyalty from './pages/Loyalty.jsx';
-import Chats from './pages/Chats.jsx';
-import Layout from './components/Layout.jsx';
-import { useAuth } from './auth.jsx';
 
-function Protected({ children }) {
-  const { isAuthed } = useAuth();
-  return isAuthed ? <Layout>{children}</Layout> : <Navigate to="/login" replace />;
-}
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+import Layout from './components/Layout.jsx';
+import Protected from './routes/protectedRoutes.jsx';
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Loader from './components/Loader.jsx';
+
+// Lazy loading
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Customers = lazy(() => import('./pages/Customers.jsx'));
+const Offers = lazy(() => import('./pages/Offers.jsx'));
+const Loyalty = lazy(() => import('./pages/Loyalty.jsx'));
+const Chats = lazy(() => import('./pages/Chats.jsx'));
 
 export default function App() {
-  const { isAuthed } = useAuth();
-
   return (
-    <Routes>
-      <Route path="/login" element={isAuthed ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<Protected><Dashboard /></Protected>} />
-      <Route path="/customers" element={<Protected><Customers /></Protected>} />
-      <Route path="/offers" element={<Protected><Offers /></Protected>} />
-      <Route path="/loyalty" element={<Protected><Loyalty /></Protected>} />
-      <Route path="/chats" element={<Protected><Chats /></Protected>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme="light"
+      />
+
+      <Suspense fallback={<Loader/>}>
+        <Routes>
+          {/* Login page */}
+          <Route path="/" element={<Login />} />
+
+          {/* Protected pages */}
+          <Route element={<Protected />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/offers" element={<Offers />} />
+              <Route path="/loyalty" element={<Loyalty />} />
+              <Route path="/chats" element={<Chats />} />
+            </Route>
+          </Route>
+        </Routes>
+      </Suspense>
+    </>
   );
 }

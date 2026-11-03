@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import Confirm from './Confirm.jsx';
 import { logout as clearAuth } from '../lib/api';
 import { useAuth } from '../auth.jsx';
+import { Outlet } from 'react-router-dom';
+
 const MENU = [
   ['/', 'Dashboard', '🏠'],
   ['/customers', 'Customers', '👥'],
@@ -25,7 +27,7 @@ export default function Layout({ children }) {
  const logout = () => {
     clearAuth();
     signOut();                    
-    nav('/login', { replace: true });
+    nav('/', { replace: true });
   };
 
   return (
@@ -69,8 +71,9 @@ export default function Layout({ children }) {
           {/* <div className="user"><span>Welcome</span><div className="avatar">A</div></div> */}
           <button className="btn ghost sm" onClick={() => setAskLogout(true)}>Logout</button>
         </header>
-        <div className="content">{children}</div>
-      </div>
+<div className="content">
+  <Outlet />
+</div>      </div>
 
       {askLogout && (
         <Confirm text="Are you sure you want to logout?" yes="Logout" onYes={logout} onNo={() => setAskLogout(false)} />

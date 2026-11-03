@@ -51,11 +51,9 @@ const [loading, setLoading] = useState(false);
   try {
     const data = await login(form.email, form.password);
     // unga existing route guard 'ss_user' paakkuthu na, idhu avasiyam
-    localStorage.setItem('ss_user', JSON.stringify({ email: data.user.email }));
-    refresh(); 
-    nav('/', { replace: true });
+    nav('/dashboard');
   } catch (err) {
-    setServerError(err.message); // "Invalid email or password"
+    // setServerError(err.message); // "Invalid email or password"
   } finally {
     setLoading(false);
   }

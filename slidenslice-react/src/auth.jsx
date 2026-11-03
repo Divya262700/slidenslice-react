@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   const [isAuthed, setIsAuthed] = useState(check);
 
   const refresh = useCallback(() => setIsAuthed(check()), []);
-  const signOut = useCallback(() => setIsAuthed(false), []);
+  const signOut = useCallback(() => {sessionStorage.removeItem("token"), sessionStorage.removeItem("user")}, []);
 
   useEffect(() => {
     window.addEventListener(AUTH_EXPIRED, signOut);
